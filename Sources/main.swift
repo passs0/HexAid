@@ -31,9 +31,7 @@ final class HexAidViewModel: ObservableObject {
     let cxAppPath = "/Applications/CrossOver.app"
     let bottlesPath = ("~/Library/Application Support/CrossOver/Bottles" as NSString).expandingTildeInPath
 
-    init() {
-        refreshStatus()
-    }
+    init() {}
 
     func appendLog(_ message: String) {
         let timestamp = DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium)
@@ -41,6 +39,17 @@ final class HexAidViewModel: ObservableObject {
     }
 
     func refreshStatus() {
+        let cxPath = cxAppPath
+        let btlPath = bottlesPath
+        Task.detached {
+            let next = Self.inspectStatus(cxAppPath: cxPath, bottlesPath: btlPath)
+            await MainActor.run {
+                self.status = next
+            }
+        }
+    }
+
+    nonisolated static func inspectStatus(cxAppPath: String, bottlesPath: String) -> ComponentStatus {
         let fm = FileManager.default
         var next = ComponentStatus()
         next.crossoverExists = fm.fileExists(atPath: cxAppPath)
@@ -87,30 +96,13 @@ final class HexAidViewModel: ObservableObject {
             next.hasDXMT = fm.fileExists(atPath: dxmtPath)
 
             let wineGstPath = "\(cxAppPath)/Contents/SharedSupport/CrossOver/lib/wine/x86_64-unix/winegstreamer.so"
-            if fm.fileExists(atPath: wineGstPath) {
-                let out = Self.runCommandCapture("/usr/bin/otool", args: ["-l", wineGstPath])
-                next.hasRpath = out.contains("GStreamer.framework/Versions/Current/lib")
+            if let data = try? Data(contentsOf: URL(fileURLWithPath: wineGstPath)),
+               let needle = "GStreamer.framework/Versions/Current/lib".data(using: .utf8) {
+                next.hasRpath = data.range(of: needle) != nil
             }
         }
 
-        status = next
-    }
-
-    nonisolated static func runCommandCapture(_ launchPath: String, args: [String]) -> String {
-        let process = Process()
-        process.executableURL = URL(fileURLWithPath: launchPath)
-        process.arguments = args
-        let pipe = Pipe()
-        process.standardOutput = pipe
-        process.standardError = pipe
-        do {
-            try process.run()
-            process.waitUntilExit()
-            let data = pipe.fileHandleForReading.readDataToEndOfFile()
-            return String(data: data, encoding: .utf8) ?? ""
-        } catch {
-            return ""
-        }
+        return next
     }
 
     func runPatch() {
@@ -487,6 +479,9 @@ struct ContentView: View {
         }
         .padding(18)
         .frame(width: 580)
+        .onAppear {
+            vm.refreshStatus()
+        }
     }
 }
 
