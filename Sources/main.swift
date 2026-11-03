@@ -121,6 +121,7 @@ final class HexAidViewModel: ObservableObject {
         Task.detached {
             let script = """
             set -e
+            setopt NULL_GLOB
             CX_APP="\(cxPath)"
             LIB64="$CX_APP/Contents/SharedSupport/CrossOver/lib64"
             WINE_UNIX="$CX_APP/Contents/SharedSupport/CrossOver/lib/wine/x86_64-unix"
