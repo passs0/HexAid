@@ -25,7 +25,7 @@ When CodeWeavers CrossOver updates (or ships out of the box), several key compon
 
 **HexAid patches `/Applications/CrossOver.app` directly in place:**
 - **No duplicate `Crossover_patched.app`**—launch CrossOver normally from your Dock or Applications folder.
-- **Preserves (and optionally upgrades) Apple Game Porting Toolkit (`D3DMetal.framework`)**.
+- **Preserves and protects Apple Game Porting Toolkit (`D3DMetal.framework`)** from accidental deletion or incompatible beta tampering.
 - **Existing (Old) Bottles Automatically Benefit:** Because CrossOver bottles load their graphics backends (`D3DMetal`, `DXMT`, `DXVK`) and media libraries (`winegstreamer.so` + `GStreamer.framework`) dynamically from `/Applications/CrossOver.app` at runtime, **once you run HexAid, all of your existing (old) bottles and already-installed games immediately benefit**—no need to recreate bottles or reinstall games!
 
 ---
@@ -39,9 +39,9 @@ When CodeWeavers CrossOver updates (or ships out of the box), several key compon
    - Automatically queries GitHub Releases for the latest [`3Shain/dxmt`](https://github.com/3Shain/dxmt) release and installs `d3d10core.dll`, `d3d11.dll`, `dxgi.dll`, and `winemetal.dll`/`winemetal.so` into `CrossOver.app`.
 3. **Latest DXVK-macOS (Optional Toggle)**
    - Queries [`Gcenx/DXVK-macOS`](https://github.com/Gcenx/DXVK-macOS) and upgrades `lib/dxvk` (`x86_64-windows` and `i386-windows`).
-4. **Apple Game Porting Toolkit (`D3DMetal.framework`) Verification & Updater**
-   - Verifies that `lib64/apple_gptk/external/D3DMetal.framework` is intact inside `CrossOver.app`.
-   - Includes a **Select GPTK DMG / Folder…** button so you can import a newer `D3DMetal.framework` directly from a mounted Apple Evaluation Environment for Windows Games `.dmg` (`redist/lib/external/D3DMetal.framework`) whenever Apple releases a new beta.
+4. **Apple Game Porting Toolkit (`D3DMetal.framework`) Integrity & Protection**
+   - Verifies that CrossOver's officially validated `lib64/apple_gptk/external/D3DMetal.framework` is intact and healthy (preventing legacy wrapper bugs that stripped D3DMetal).
+   - **Why standalone beta GPTK injection is intentionally avoided:** Apple's newer GPTK betas introduce tight internal ABI dependencies between `D3DMetal.framework` and Wine's PE Direct3D 12 libraries (`d3d12.dll`). Injecting unverified beta frameworks into CrossOver causes severe entry point and ABI mismatches that crash DirectX 12 games. CodeWeavers officially tests and bundles verified D3DMetal builds with CrossOver releases; HexAid safely protects this tested engine.
 5. **Existing Bottle Performance Optimizations**
    - Optionally scans all existing bottles in `~/Library/Application Support/CrossOver/Bottles/` and enables `WINEMSYNC=1` (MSync) and `ROSETTA_ADVERTISE_AVX=1` (AVX/AVX2 advertising under Rosetta 2) in `cxbottle.conf`.
 6. **GStreamer & D3DMetal Cache Cleaner**

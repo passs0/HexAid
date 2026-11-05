@@ -1,6 +1,5 @@
 import Cocoa
 import SwiftUI
-import UniformTypeIdentifiers
 
 struct ComponentStatus {
     var crossoverExists: Bool = false
@@ -212,52 +211,6 @@ final class HexAidViewModel: ObservableObject {
         }
     }
 
-    func importD3DMetalFromFolderOrVolume() {
-        guard !isBusy else { return }
-        let panel = NSOpenPanel()
-        panel.title = "Select Mounted Apple GPTK Volume or redist Folder"
-        panel.message = "Choose a mounted Apple Game Porting Toolkit (Evaluation Environment) volume or folder containing D3DMetal.framework"
-        panel.canChooseFiles = false
-        panel.canChooseDirectories = true
-        panel.allowsMultipleSelection = false
-
-        guard panel.runModal() == .OK, let selectedURL = panel.url else { return }
-        let selectedPath = selectedURL.path
-        let cxPath = cxAppPath
-
-        isBusy = true
-        logs.removeAll()
-        appendLog("Searching for D3DMetal.framework in \(selectedPath)...")
-
-        Task.detached {
-            let script = """
-            set -e
-            SRC_ROOT="\(selectedPath)"
-            CX_APP="\(cxPath)"
-            GPTK_DEST="$CX_APP/Contents/SharedSupport/CrossOver/lib64/apple_gptk/external"
-
-            D3DM_FW=$(find "$SRC_ROOT" -maxdepth 5 -name "D3DMetal.framework" -type d | head -n1 || true)
-            if [ -z "$D3DM_FW" ]; then
-                echo "❌ Could not find D3DMetal.framework inside $SRC_ROOT"
-                exit 1
-            fi
-            SRC_EXT=$(dirname "$D3DM_FW")
-            echo "Found D3DMetal at: $D3DM_FW"
-            mkdir -p "$GPTK_DEST"
-            rm -rf "$GPTK_DEST/D3DMetal.framework"
-            cp -a "$D3DM_FW" "$GPTK_DEST/"
-            if [ -f "$SRC_EXT/libd3dshared.dylib" ]; then
-                cp -a "$SRC_EXT/libd3dshared.dylib" "$GPTK_DEST/"
-            fi
-            echo "Re-signing CrossOver.app..."
-            xattr -cr "$CX_APP"
-            codesign --force --deep --sign - "$CX_APP"
-            echo "✅ D3DMetal.framework updated successfully!"
-            """
-            await self.executeShellScript(script)
-        }
-    }
-
     func clearShaderCaches() {
         guard !isBusy else { return }
         isBusy = true
@@ -394,7 +347,7 @@ struct ContentView: View {
                 )
                 StatusRow(
                     title: "Apple D3DMetal (Game Porting Toolkit)",
-                    subtitle: "DirectX 12 to Metal translation layer in lib64/apple_gptk",
+                    subtitle: "Verified DirectX 12 to Metal runtime in lib64/apple_gptk (protected)",
                     badgeText: vm.status.d3dMetalVersion,
                     ok: vm.status.hasD3DMetal
                 )
@@ -441,12 +394,6 @@ struct ContentView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .tint(.yellow)
-                .disabled(vm.isBusy || !vm.status.crossoverExists)
-
-                Button("Import GPTK D3DMetal...") {
-                    vm.importD3DMetalFromFolderOrVolume()
-                }
-                .help("Upgrade D3DMetal.framework from a mounted Apple Game Porting Toolkit .dmg")
                 .disabled(vm.isBusy || !vm.status.crossoverExists)
 
                 Button("Clear Caches") {
