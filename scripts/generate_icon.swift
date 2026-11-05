@@ -8,9 +8,64 @@ let fm = FileManager.default
 try? fm.removeItem(atPath: outDir)
 try? fm.createDirectory(atPath: outDir, withIntermediateDirectories: true)
 
-guard let srcImage = NSImage(contentsOfFile: inputIcon) else {
+guard let rawImg = NSImage(contentsOfFile: inputIcon),
+      let cgImage = rawImg.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
     fputs("Error: Could not load source icon at \(inputIcon)\n", stderr)
     exit(1)
+}
+
+// Check if source image is full-bleed or already padded for macOS dock
+func isFullBleed(img: NSImage) -> Bool {
+    guard let rep = img.representations.first as? NSBitmapImageRep else { return false }
+    let w = rep.pixelsWide
+    let _ = rep.pixelsHigh
+    // Check if corners have content or squircle touches edges (< 20px margin)
+    let c0 = rep.colorAt(x: 20, y: 20)?.alphaComponent ?? 0
+    let c1 = rep.colorAt(x: w - 21, y: 20)?.alphaComponent ?? 0
+    return c0 > 0.05 || c1 > 0.05
+}
+
+let masterImage: NSImage
+if isFullBleed(img: rawImg) {
+    let size: CGFloat = 1024
+    let rep = NSBitmapImageRep(
+        bitmapDataPlanes: nil,
+        pixelsWide: Int(size),
+        pixelsHigh: Int(size),
+        bitsPerSample: 8,
+        samplesPerPixel: 4,
+        hasAlpha: true,
+        isPlanar: false,
+        colorSpaceName: .deviceRGB,
+        bytesPerRow: 0,
+        bitsPerPixel: 0
+    )!
+    NSGraphicsContext.saveGraphicsState()
+    let nsCtx = NSGraphicsContext(bitmapImageRep: rep)!
+    NSGraphicsContext.current = nsCtx
+    let ctx = nsCtx.cgContext
+    ctx.setAllowsAntialiasing(true)
+    ctx.setShouldAntialias(true)
+    ctx.interpolationQuality = .high
+
+    // macOS native dock drop shadow
+    ctx.saveGState()
+    ctx.setShadow(
+        offset: CGSize(width: 0, height: -12),
+        blur: 24,
+        color: CGColor(red: 0, green: 0, blue: 0, alpha: 0.40)
+    )
+    let bodySize: CGFloat = 824
+    let margin: CGFloat = (size - bodySize) / 2.0 // 100 pt margin
+    let bodyRect = CGRect(x: margin, y: margin + 4, width: bodySize, height: bodySize)
+    ctx.draw(cgImage, in: bodyRect)
+    ctx.restoreGState()
+    NSGraphicsContext.restoreGraphicsState()
+
+    let pngData = rep.representation(using: .png, properties: [:])!
+    masterImage = NSImage(data: pngData)!
+} else {
+    masterImage = rawImg
 }
 
 let specs: [(String, Int)] = [
@@ -43,7 +98,7 @@ for (name, px) in specs {
     let ctx = NSGraphicsContext(bitmapImageRep: rep)!
     NSGraphicsContext.current = ctx
     ctx.cgContext.interpolationQuality = .high
-    srcImage.draw(in: NSRect(x: 0, y: 0, width: px, height: px), from: .zero, operation: .copy, fraction: 1.0)
+    masterImage.draw(in: NSRect(x: 0, y: 0, width: px, height: px), from: .zero, operation: .copy, fraction: 1.0)
     NSGraphicsContext.restoreGraphicsState()
     guard let data = rep.representation(using: .png, properties: [:]) else {
         fputs("Error generating png for \(name)\n", stderr)
