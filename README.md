@@ -13,7 +13,7 @@
 
 > [!NOTE]
 > **AI-Generated Tool Disclosure**
-> **HexAid** (including its SwiftUI source code, patching automation, and procedural CoreGraphics Apple Liquid Glass icon generator) is an **AI-generated tool** created with **Antigravity** (Google DeepMind) and inspired by the open-source macOS gaming community's work on **CXPatcher** and **Procyon**.
+> **HexAid** (including its SwiftUI source code, patching automation, and Apple Liquid Glass icon design) is an **AI-generated tool** created with **Antigravity** (Google DeepMind) and inspired by the open-source macOS gaming community's work on **CXPatcher** and **Procyon**.
 
 ---
 

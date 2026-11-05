@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <g transform="translate(512 512) rotate(38.7)" fill="#9CA3AF">
+    <g id="perforations_slate">
+      <circle cx="-192" cy="-42" r="8"/>
+      <circle cx="-192" cy="0" r="8"/>
+      <circle cx="-192" cy="42" r="8"/>
+      <circle cx="-148" cy="-42" r="8"/>
+      <circle cx="-148" cy="0" r="8"/>
+      <circle cx="-148" cy="42" r="8"/>
+      <circle cx="148" cy="-42" r="8"/>
+      <circle cx="148" cy="0" r="8"/>
+      <circle cx="148" cy="42" r="8"/>
+      <circle cx="192" cy="-42" r="8"/>
+      <circle cx="192" cy="0" r="8"/>
+      <circle cx="192" cy="42" r="8"/>
+    </g>
+  </g>
+</svg>
