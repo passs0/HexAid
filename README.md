@@ -60,10 +60,16 @@ When CodeWeavers CrossOver updates (or ships out of the box), several key compon
 
 ---
 
-## 🛠️ Building & Installing
+## 📦 Installation
 
-HexAid has **zero external dependencies** and compiles cleanly using the standard macOS Command Line Tools (`swiftc`, `iconutil`, `codesign`).
+### Option 1: Direct Download (Pre-built macOS Disk Image - Recommended)
+1. Download **[`HexAid-v2.2.0.dmg`](https://github.com/passs0/HexAid/releases/latest)** from [GitHub Releases](https://github.com/passs0/HexAid/releases).
+2. Open the downloaded `.dmg` and drag **`HexAid.app`** directly into the **`Applications`** folder shortcut.
+3. Open **`HexAid.app`** from `/Applications` and click **Patch CrossOver Now**!
+   - *Note: If macOS Gatekeeper flags the binary on first launch (ad-hoc signed), right-click `HexAid.app` ➔ **Open**, or run `xattr -cr /Applications/HexAid.app`.*
 
+### Option 2: Build from Source
+HexAid has **zero external dependencies** and compiles cleanly using the standard macOS Command Line Tools (`swiftc`, `iconutil`, `codesign`):
 ```zsh
 git clone https://github.com/passs0/HexAid.git
 cd HexAid
