@@ -9,7 +9,7 @@
   Upgrades GStreamer (with FFmpeg / Media Foundation decoding), DXMT, DXVK, Apple Game Porting Toolkit (<code>D3DMetal.framework</code>), and bottle performance settings directly inside <code>/Applications/CrossOver.app</code>.
 </p>
 
-<p align=center>
+<p align="center">
   <a href="https://github.com/passs0/HexAid/releases/latest"><img src="https://img.shields.io/github/v/release/passs0/HexAid?label=Latest%20Release&color=007AFF" alt="Latest Release" /></a>
   <img src="https://img.shields.io/badge/macOS-13.0%2B%20%7C%20Apple%20Silicon-black?logo=apple" alt="macOS 13.0+" />
   <img src="https://img.shields.io/badge/framework-SwiftUI%20%7C%20AppKit-blue" alt="Frameworks" />
