@@ -530,17 +530,17 @@ struct ComponentRowView: View {
                 Spacer()
 
                 Text(badgeText)
-                    .font(.system(size: 11, weight: .medium))
+                    .font(.system(size: 11, weight: .semibold))
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)
                     .background(
                         Capsule()
-                            .fill((isOk ? Color.green : Color.orange).opacity(0.12))
+                            .fill((isOk ? Color.green : Color.orange).opacity(0.18))
                     )
                     .foregroundColor(isOk ? .green : .orange)
             }
             .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.vertical, 7)
 
             if showDivider {
                 Divider()
@@ -580,7 +580,7 @@ struct ToggleRowView: View {
                     .disabled(!isEnabled)
             }
             .padding(.horizontal, 12)
-            .padding(.vertical, 8)
+            .padding(.vertical, 6)
 
             if showDivider {
                 Divider()
@@ -596,21 +596,21 @@ struct ContentView: View {
     @StateObject private var vm = HexAidViewModel()
 
     var body: some View {
-        VStack(spacing: 14) {
-            // Header Bar
+        VStack(spacing: 0) {
+            // App Header Bar
             HStack(spacing: 12) {
                 if let appIcon = NSApp.applicationIconImage {
                     Image(nsImage: appIcon)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .frame(width: 44, height: 44)
+                        .frame(width: 42, height: 42)
                 } else {
                     ZStack {
                         RoundedRectangle(cornerRadius: 10, style: .continuous)
                             .fill(LinearGradient(colors: [.orange, .yellow], startPoint: .top, endPoint: .bottom))
-                            .frame(width: 44, height: 44)
+                            .frame(width: 42, height: 42)
                         Image(systemName: "bandage.fill")
-                            .font(.system(size: 20, weight: .bold))
+                            .font(.system(size: 18, weight: .bold))
                             .foregroundColor(.white)
                     }
                 }
@@ -618,12 +618,12 @@ struct ContentView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 8) {
                         Text("HexAid")
-                            .font(.system(size: 19, weight: .bold))
+                            .font(.system(size: 18, weight: .bold))
                         Text("v2.3.0")
                             .font(.system(size: 11, weight: .semibold))
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
-                            .background(Color.orange.opacity(0.15))
+                            .background(Color.orange.opacity(0.18))
                             .foregroundColor(.orange)
                             .clipShape(Capsule())
                     }
@@ -636,7 +636,7 @@ struct ContentView: View {
 
                 HStack(spacing: 8) {
                     Text("\(vm.status.bottleCount) Bottle(s)")
-                        .font(.system(size: 11, weight: .medium))
+                        .font(.system(size: 11.5, weight: .medium))
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
                         .background(Color(nsColor: .controlBackgroundColor))
@@ -646,12 +646,14 @@ struct ContentView: View {
                         Image(systemName: "arrow.clockwise")
                             .font(.system(size: 12, weight: .medium))
                     }
-                    .buttonStyle(.borderless)
+                    .buttonStyle(.bordered)
                     .disabled(vm.isBusy)
                     .help("Refresh component status")
                 }
             }
-            .padding(.top, 4)
+            .padding(.horizontal, 18)
+            .padding(.top, 14)
+            .padding(.bottom, 10)
 
             // Segmented Tab Picker
             Picker("", selection: $vm.activeTab) {
@@ -661,22 +663,93 @@ struct ContentView: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
+            .padding(.horizontal, 18)
+            .padding(.bottom, 12)
 
-            // Active Tab Content
-            Group {
+            Divider()
+
+            // Scrollable Workspace Content
+            ScrollView(.vertical, showsIndicators: true) {
+                VStack(spacing: 14) {
+                    switch vm.activeTab {
+                    case .patcher:
+                        patcherView
+                    case .optimizations:
+                        optimizationsView
+                    case .maintenance:
+                        maintenanceView
+                    }
+                }
+                .padding(.horizontal, 18)
+                .padding(.vertical, 14)
+            }
+
+            Divider()
+
+            // Persistent Sticky Bottom Action Bar
+            HStack(spacing: 12) {
                 switch vm.activeTab {
                 case .patcher:
-                    patcherView
+                    Button(action: { vm.runPatch() }) {
+                        HStack(spacing: 8) {
+                            if vm.isBusy {
+                                ProgressView()
+                                    .controlSize(.small)
+                            } else {
+                                Image(systemName: "bandage.fill")
+                            }
+                            Text(vm.isBusy ? "Patching CrossOver.app..." : (vm.status.isReady ? "Re-Apply Patches to CrossOver.app" : "Patch CrossOver.app Now"))
+                                .font(.system(size: 13, weight: .semibold))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 4)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.orange)
+                    .controlSize(.large)
+                    .disabled(vm.isBusy || !vm.status.crossoverExists)
+
                 case .optimizations:
-                    optimizationsView
+                    Button(action: { vm.applyOptimizations() }) {
+                        HStack(spacing: 8) {
+                            if vm.isBusy {
+                                ProgressView()
+                                    .controlSize(.small)
+                            } else {
+                                Image(systemName: "bolt.fill")
+                            }
+                            Text(vm.isBusy ? "Applying Optimizations..." : "Apply Optimizations to Bottles")
+                                .font(.system(size: 13, weight: .semibold))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 4)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.orange)
+                    .controlSize(.large)
+                    .disabled(vm.isBusy || !vm.status.crossoverExists)
+
                 case .maintenance:
-                    maintenanceView
+                    Button(action: { vm.clearShaderCaches() }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "trash")
+                            Text("Purge Shader & Registry Caches (\(vm.status.formattedCacheSize))")
+                                .font(.system(size: 13, weight: .semibold))
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 4)
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.large)
+                    .disabled(vm.isBusy)
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 12)
+            .background(Color(nsColor: .windowBackgroundColor))
         }
-        .padding(18)
-        .frame(width: 600, height: 530)
+        .frame(minWidth: 620, idealWidth: 620, maxWidth: .infinity,
+               minHeight: 650, idealHeight: 670, maxHeight: .infinity)
         .onAppear {
             vm.refreshStatus()
         }
@@ -757,27 +830,6 @@ struct ContentView: View {
                     showDivider: false
                 )
             }
-
-            Spacer()
-
-            Button(action: { vm.runPatch() }) {
-                HStack(spacing: 8) {
-                    if vm.isBusy {
-                        ProgressView()
-                            .controlSize(.small)
-                    } else {
-                        Image(systemName: "bandage.fill")
-                    }
-                    Text(vm.isBusy ? "Patching CrossOver.app..." : (vm.status.isReady ? "Re-Apply Patches to CrossOver.app" : "Patch CrossOver.app Now"))
-                        .font(.system(size: 13, weight: .semibold))
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 4)
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(.orange)
-            .controlSize(.large)
-            .disabled(vm.isBusy || !vm.status.crossoverExists)
         }
     }
 
@@ -826,27 +878,6 @@ struct ContentView: View {
                 }
                 .padding(12)
             }
-
-            Spacer()
-
-            Button(action: { vm.applyOptimizations() }) {
-                HStack(spacing: 8) {
-                    if vm.isBusy {
-                        ProgressView()
-                            .controlSize(.small)
-                    } else {
-                        Image(systemName: "bolt.fill")
-                    }
-                    Text(vm.isBusy ? "Applying Optimizations..." : "Apply Optimizations to Bottles")
-                        .font(.system(size: 13, weight: .semibold))
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 4)
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(.orange)
-            .controlSize(.large)
-            .disabled(vm.isBusy || !vm.status.crossoverExists)
         }
     }
 
@@ -923,7 +954,7 @@ struct ContentView: View {
                             }
                             .padding(8)
                         }
-                        .frame(height: 180)
+                        .frame(height: 220)
                         .background(Color(nsColor: .textBackgroundColor).opacity(0.85))
                         .onChange(of: vm.logs.count) { oldValue, newValue in
                             if let last = vm.logs.indices.last {
@@ -947,21 +978,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         let contentView = ContentView()
         window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 600, height: 530),
-            styleMask: [.titled, .closable, .miniaturizable, .fullSizeContentView],
+            contentRect: NSRect(x: 0, y: 0, width: 620, height: 670),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
             defer: false
         )
         window.center()
-        window.title = "HexAid"
-        window.titleVisibility = .hidden
-        window.titlebarAppearsTransparent = true
-        window.isMovableByWindowBackground = true
+        window.title = "HexAid — CrossOver Patcher"
+        window.minSize = NSSize(width: 600, height: 620)
 
         let visualEffect = NSVisualEffectView()
         visualEffect.blendingMode = .behindWindow
         visualEffect.state = .active
-        visualEffect.material = .underWindowBackground
+        visualEffect.material = .windowBackground
 
         let hostingView = NSHostingView(rootView: contentView)
         hostingView.autoresizingMask = [.width, .height]
