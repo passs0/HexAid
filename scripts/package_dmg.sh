@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$SCRIPT_DIR"
 
 APP_NAME="HexAid"
-VERSION="2.2.0"
+VERSION=$(/usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "build/$APP_NAME.app/Contents/Info.plist" 2>/dev/null || echo "2.3.0")
 DMG_NAME="HexAid-v${VERSION}.dmg"
 STAGING_DIR="/tmp/hexaid_dmg_staging"
 RW_DMG="/tmp/hexaid_rw.dmg"

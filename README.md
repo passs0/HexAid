@@ -53,17 +53,23 @@ When CodeWeavers CrossOver updates (or ships out of the box), several key compon
 4. **Apple Game Porting Toolkit (`D3DMetal.framework`) Integrity & Protection**
    - Verifies that CrossOver's officially validated `lib64/apple_gptk/external/D3DMetal.framework` is intact and healthy (preventing legacy wrapper bugs that stripped D3DMetal).
    - **Why standalone beta GPTK injection is intentionally avoided:** Apple's newer GPTK betas introduce tight internal ABI dependencies between `D3DMetal.framework` and Wine's PE Direct3D 12 libraries (`d3d12.dll`). Injecting unverified beta frameworks into CrossOver causes severe entry point and ABI mismatches that crash DirectX 12 games. CodeWeavers officially tests and bundles verified D3DMetal builds with CrossOver releases; HexAid safely protects this tested engine.
-5. **Existing Bottle Performance Optimizations**
-   - Optionally scans all existing bottles in `~/Library/Application Support/CrossOver/Bottles/` and enables `WINEMSYNC=1` (MSync) and `ROSETTA_ADVERTISE_AVX=1` (AVX/AVX2 advertising under Rosetta 2) in `cxbottle.conf`.
-6. **GStreamer & D3DMetal Cache Cleaner**
-   - Purges stale `gstreamer-1.0-registry.x86_64.bin` and `d3dm` shader caches so updated plugins and shaders load cleanly on your next launch.
+5. **NVIDIA RTX D3DMetal Spoofing (`0x10DE` / RTX 4090)**
+   - Configures D3DMetal to report an NVIDIA GPU instead of an AMD GPU. Completely eliminates the infamous "Outdated AMD Graphics Driver" error in Unreal Engine 5 titles (*Silent Hill 2*, *Lords of the Fallen*, etc.) and unlocks in-game NVIDIA DLSS options (which map directly to native **Apple MetalFX**).
+6. **Apple Metal Performance HUD Overlay (`MTL_HUD_ENABLED=1`)**
+   - One-click toggle to enable or disable Apple's native Metal real-time performance HUD (FPS, frame-time graph, and GPU memory load) across all your bottles.
+7. **macOS Game Mode Enabler**
+   - Injects `LSApplicationCategoryType = public.app-category.games` into `CrossOver.app` and your game launchers in `~/Applications/CrossOver`, ensuring macOS `gamepolicyd` prioritizes CPU/GPU resources and boosts Bluetooth controller polling rates in full screen.
+8. **Storage & Shader Cache Inspector**
+   - Scans and calculates the actual disk space consumed by D3DMetal shader caches in `/var/folders` and GStreamer registries, providing one-click cache purging.
+9. **Existing Bottle Performance Optimizations**
+   - Scans all existing bottles in `~/Library/Application Support/CrossOver/Bottles/` and enables `WINEMSYNC=1` (MSync) and `ROSETTA_ADVERTISE_AVX=1` (AVX/AVX2 advertising under Rosetta 2) in `cxbottle.conf`.
 
 ---
 
 ## 📦 Installation
 
 ### Option 1: Direct Download (Pre-built macOS Disk Image - Recommended)
-1. Download **[`HexAid-v2.2.0.dmg`](https://github.com/passs0/HexAid/releases/latest)** from [GitHub Releases](https://github.com/passs0/HexAid/releases).
+1. Download **[`HexAid-v2.3.dmg`](https://github.com/passs0/HexAid/releases/latest)** from [GitHub Releases](https://github.com/passs0/HexAid/releases).
 2. Open the downloaded `.dmg` and drag **`HexAid.app`** directly into the **`Applications`** folder shortcut.
 3. Open **`HexAid.app`** from `/Applications` and click **Patch CrossOver Now**!
    - *Note: If macOS Gatekeeper flags the binary on first launch (ad-hoc signed), right-click `HexAid.app` ➔ **Open**, or run `xattr -cr /Applications/HexAid.app`.*
