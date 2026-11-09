@@ -66,6 +66,35 @@ When CodeWeavers CrossOver updates (or ships out of the box), several key compon
 
 ---
 
+## 🖥️ User Interface & Workspaces
+
+HexAid is designed with **Apple Human Interface Guidelines (HIG)**, featuring translucent materials, colorful squircle icon wells, and a persistent sticky action footer across three focused workspaces:
+
+<div align="center">
+
+### 1. Patcher Workspace
+*In-place upgrades for GStreamer + FFmpeg, DXMT, and DXVK while protecting official Apple D3DMetal.*
+
+<img src="assets/preview_patcher.png" width="580" alt="HexAid Patcher Interface" />
+
+<br/><br/>
+
+### 2. Gaming Optimizations Workspace
+*One-click toggles for Apple Metal Performance HUD, NVIDIA RTX GPU spoofing, and macOS Game Mode.*
+
+<img src="assets/preview_optimizations.png" width="580" alt="HexAid Optimizations Interface" />
+
+<br/><br/>
+
+### 3. Activity & Caches Workspace
+*Live D3DMetal and GStreamer shader cache inspection with one-click purge and an interactive execution log.*
+
+<img src="assets/preview_maintenance.png" width="580" alt="HexAid Activity & Caches Interface" />
+
+</div>
+
+---
+
 ## 📦 Installation
 
 ### Option 1: Direct Download (Pre-built macOS Disk Image - Recommended)

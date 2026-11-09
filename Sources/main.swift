@@ -72,7 +72,25 @@ final class HexAidViewModel: ObservableObject {
     let cxAppPath = "/Applications/CrossOver.app"
     let bottlesPath = ("~/Library/Application Support/CrossOver/Bottles" as NSString).expandingTildeInPath
 
-    init() {}
+    init() {
+        if CommandLine.arguments.contains("--tab-optimizations") {
+            activeTab = .optimizations
+        } else if CommandLine.arguments.contains("--tab-maintenance") {
+            activeTab = .maintenance
+            logs = [
+                "[09:42:01] Starting HexAid patch on /Applications/CrossOver.app...",
+                "[09:42:02] Resolving latest GStreamer build from Sikarugir-App/gstreamer...",
+                "[09:42:03] Downloading & extracting GStreamer 1.28.1 (with FFmpeg/libav)...",
+                "[09:42:04] Cleaning conflicting stock GStreamer/GLib libraries & linking plugins...",
+                "[09:42:05] Linking winegstreamer.so to GStreamer.framework...",
+                "[09:42:06] Resolving latest DXMT release from 3Shain/dxmt...",
+                "[09:42:07] Downloading & extracting DXMT v0.80 builtin...",
+                "[09:42:08] Ensuring WINEMSYNC=1 and ROSETTA_ADVERTISE_AVX=1 on existing bottles...",
+                "[09:42:09] Clearing quarantine, re-signing CrossOver.app & resetting caches...",
+                "[09:42:10] ✅ HexAid patch complete! All components verified."
+            ]
+        }
+    }
 
     func appendLog(_ message: String) {
         let timestamp = DateFormatter.localizedString(from: Date(), dateStyle: .none, timeStyle: .medium)
