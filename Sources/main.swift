@@ -651,27 +651,10 @@ struct ContentView: View {
                 }
 
                 Spacer()
-
-                HStack(spacing: 8) {
-                    Text("\(vm.status.bottleCount) Bottle(s)")
-                        .font(.system(size: 11.5, weight: .medium))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color(nsColor: .controlBackgroundColor))
-                        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-
-                    Button(action: { vm.refreshStatus() }) {
-                        Image(systemName: "arrow.clockwise")
-                            .font(.system(size: 12, weight: .medium))
-                    }
-                    .buttonStyle(.bordered)
-                    .disabled(vm.isBusy)
-                    .help("Refresh component status")
-                }
             }
-            .padding(.horizontal, 18)
+            .padding(.horizontal, 20)
             .padding(.top, 14)
-            .padding(.bottom, 10)
+            .padding(.bottom, 12)
 
             // Segmented Tab Picker
             Picker("", selection: $vm.activeTab) {
@@ -681,8 +664,8 @@ struct ContentView: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            .padding(.horizontal, 18)
-            .padding(.bottom, 12)
+            .padding(.horizontal, 20)
+            .padding(.bottom, 14)
 
             Divider()
 
@@ -768,6 +751,26 @@ struct ContentView: View {
         }
         .frame(minWidth: 620, idealWidth: 620, maxWidth: .infinity,
                minHeight: 650, idealHeight: 670, maxHeight: .infinity)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                HStack(spacing: 8) {
+                    Text("\(vm.status.bottleCount) Bottle(s)")
+                        .font(.system(size: 11.5, weight: .medium))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color(nsColor: .controlBackgroundColor))
+                        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+
+                    Button(action: { vm.refreshStatus() }) {
+                        Image(systemName: "arrow.clockwise")
+                            .font(.system(size: 12, weight: .medium))
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(vm.isBusy)
+                    .help("Refresh component status")
+                }
+            }
+        }
         .onAppear {
             vm.refreshStatus()
         }
@@ -996,26 +999,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         let contentView = ContentView()
         window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 620, height: 670),
+            contentRect: NSRect(x: 0, y: 0, width: 620, height: 690),
             styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
             defer: false
         )
         window.center()
-        window.title = "HexAid — CrossOver Patcher"
-        window.minSize = NSSize(width: 600, height: 620)
+        window.title = "HexAid"
+        window.toolbarStyle = .unified
+        window.titlebarSeparatorStyle = .none
+        window.isMovableByWindowBackground = true
+        window.minSize = NSSize(width: 600, height: 640)
 
-        let visualEffect = NSVisualEffectView()
-        visualEffect.blendingMode = .behindWindow
-        visualEffect.state = .active
-        visualEffect.material = .windowBackground
-
-        let hostingView = NSHostingView(rootView: contentView)
-        hostingView.autoresizingMask = [.width, .height]
-        visualEffect.addSubview(hostingView)
-        hostingView.frame = visualEffect.bounds
-
-        window.contentView = visualEffect
+        window.contentViewController = NSHostingController(rootView: contentView)
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
     }
