@@ -645,12 +645,22 @@ struct ContentView: View {
                             .foregroundColor(.orange)
                             .clipShape(Capsule())
                     }
-                    Text("/Applications/CrossOver.app • v\(vm.status.versionString)")
+                    Text("/Applications/CrossOver.app • v\(vm.status.versionString) • \(vm.status.bottleCount) Bottle\(vm.status.bottleCount == 1 ? "" : "s")")
                         .font(.system(size: 11.5))
                         .foregroundColor(.secondary)
                 }
 
                 Spacer()
+
+                Button(action: { vm.refreshStatus() }) {
+                    Image(systemName: "arrow.clockwise")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+                .keyboardShortcut("r", modifiers: .command)
+                .disabled(vm.isBusy)
+                .help("Refresh status (⌘R)")
             }
             .padding(.horizontal, 20)
             .padding(.top, 14)
@@ -751,26 +761,6 @@ struct ContentView: View {
         }
         .frame(minWidth: 620, idealWidth: 620, maxWidth: .infinity,
                minHeight: 650, idealHeight: 670, maxHeight: .infinity)
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                HStack(spacing: 8) {
-                    Text("\(vm.status.bottleCount) Bottle(s)")
-                        .font(.system(size: 11.5, weight: .medium))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color(nsColor: .controlBackgroundColor))
-                        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-
-                    Button(action: { vm.refreshStatus() }) {
-                        Image(systemName: "arrow.clockwise")
-                            .font(.system(size: 12, weight: .medium))
-                    }
-                    .buttonStyle(.bordered)
-                    .disabled(vm.isBusy)
-                    .help("Refresh component status")
-                }
-            }
-        }
         .onAppear {
             vm.refreshStatus()
         }
