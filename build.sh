@@ -25,7 +25,7 @@ cat > "${APP_BUNDLE}/Contents/Info.plist" << 'EOF'
     <key>CFBundleExecutable</key>
     <string>HexAid</string>
     <key>CFBundleIdentifier</key>
-    <string>com.hexaid.crossoverpatcher</string>
+    <string>com.hexaid.app</string>
     <key>CFBundleName</key>
     <string>HexAid</string>
     <key>CFBundleDisplayName</key>
