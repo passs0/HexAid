@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/icon.png" width="160" height="160" alt="HexAid Icon" />
+  <img src="assets/icon_mac.png" width="160" height="160" alt="HexAid Icon" />
 </p>
 
 <h1 align="center">HexAid</h1>
