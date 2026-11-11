@@ -2,27 +2,34 @@ import AppKit
 
 let args = CommandLine.arguments
 let outDir = args.count > 1 ? args[1] : "build/AppIcon.iconset"
-let inputIcon = args.count > 2 ? args[2] : "assets/icon.png"
+let inputIcon = args.count > 2 ? args[2] : "assets/icon_mac.png"
 
 let fm = FileManager.default
 try? fm.removeItem(atPath: outDir)
 try? fm.createDirectory(atPath: outDir, withIntermediateDirectories: true)
 
-guard let rawImg = NSImage(contentsOfFile: inputIcon),
+// Prefer pre-padded icon_mac.png if inputIcon is default assets/icon.png
+var resolvedInput = inputIcon
+if inputIcon == "assets/icon.png" && fm.fileExists(atPath: "assets/icon_mac.png") {
+    resolvedInput = "assets/icon_mac.png"
+}
+
+guard let rawImg = NSImage(contentsOfFile: resolvedInput),
       let cgImage = rawImg.cgImage(forProposedRect: nil, context: nil, hints: nil) else {
-    fputs("Error: Could not load source icon at \(inputIcon)\n", stderr)
+    fputs("Error: Could not load source icon at \(resolvedInput)\n", stderr)
     exit(1)
 }
 
-// Check if source image is full-bleed or already padded for macOS dock
+// Check if source image touches canvas edges (cardinal points on 1024x1024 canvas)
 func isFullBleed(img: NSImage) -> Bool {
     guard let rep = img.representations.first as? NSBitmapImageRep else { return false }
     let w = rep.pixelsWide
-    let _ = rep.pixelsHigh
-    // Check if corners have content or squircle touches edges (< 20px margin)
-    let c0 = rep.colorAt(x: 20, y: 20)?.alphaComponent ?? 0
-    let c1 = rep.colorAt(x: w - 21, y: 20)?.alphaComponent ?? 0
-    return c0 > 0.05 || c1 > 0.05
+    let h = rep.pixelsHigh
+    let top = rep.colorAt(x: w / 2, y: 15)?.alphaComponent ?? 0
+    let bottom = rep.colorAt(x: w / 2, y: h - 16)?.alphaComponent ?? 0
+    let left = rep.colorAt(x: 15, y: h / 2)?.alphaComponent ?? 0
+    let right = rep.colorAt(x: w - 16, y: h / 2)?.alphaComponent ?? 0
+    return top > 0.05 || bottom > 0.05 || left > 0.05 || right > 0.05
 }
 
 let masterImage: NSImage
@@ -57,7 +64,7 @@ if isFullBleed(img: rawImg) {
     )
     let bodySize: CGFloat = 824
     let margin: CGFloat = (size - bodySize) / 2.0 // 100 pt margin
-    let bodyRect = CGRect(x: margin, y: margin + 4, width: bodySize, height: bodySize)
+    let bodyRect = CGRect(x: margin, y: margin + 8, width: bodySize, height: bodySize)
     ctx.draw(cgImage, in: bodyRect)
     ctx.restoreGState()
     NSGraphicsContext.restoreGraphicsState()
@@ -107,4 +114,4 @@ for (name, px) in specs {
     try! data.write(to: URL(fileURLWithPath: "\(outDir)/\(name)"))
 }
 
-print("Generated \(outDir) successfully from \(inputIcon)")
+print("Generated \(outDir) successfully from \(resolvedInput)")
