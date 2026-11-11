@@ -38,6 +38,8 @@ cat > "${APP_BUNDLE}/Contents/Info.plist" << 'EOF'
     <string>APPL</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
+    <key>CFBundleIconName</key>
+    <string>HexAid</string>
     <key>LSMinimumSystemVersion</key>
     <string>15.0</string>
     <key>NSHighResolutionCapable</key>
@@ -45,6 +47,17 @@ cat > "${APP_BUNDLE}/Contents/Info.plist" << 'EOF'
 </dict>
 </plist>
 EOF
+
+if [ -d "assets/HexAid.icon.xcassets" ] && xcrun actool --version >/dev/null 2>&1; then
+    echo "🎨 Compiling dynamic multi-appearance iconstack into Assets.car..."
+    xcrun actool "assets/HexAid.icon.xcassets" \
+        --compile "${APP_BUNDLE}/Contents/Resources" \
+        --platform macosx \
+        --minimum-deployment-target 15.0 \
+        --app-icon HexAid \
+        --output-partial-info-plist /tmp/hexaid_partial.plist \
+        --output-format human-readable-text || true
+fi
 
 echo "3. Compiling ${APP_NAME} (targeting arm64-apple-macos15.0)..."
 swiftc -O \
