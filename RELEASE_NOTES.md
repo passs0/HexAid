@@ -1,5 +1,12 @@
 # HexAid Release Notes
 
+## v2.4.0 — CrossOver Preview support
+
+- Detect CrossOver and CrossOver Preview app bundles in `/Applications` and `~/Applications`; choose the installation when both are present.
+- Inspect and patch the selected app bundle, and use its configured bottle directory when available.
+- Keep the bottom patch action visible in shorter windows.
+- Built with Xcode 26.6 and ad-hoc code-signed in GitHub Actions; supports macOS 13 and later.
+
 ## v2.3.2 — Window layout fix
 
 - Reduced the minimum content height and matched the native window minimum so the persistent patch action stays fully inside the window on shorter displays.

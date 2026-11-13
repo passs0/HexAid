@@ -48,6 +48,15 @@ enum ActiveTab: String, CaseIterable, Identifiable {
     }
 }
 
+struct CrossOverInstallation: Identifiable, Hashable, Sendable {
+    let path: String
+
+    var id: String { path }
+    var displayName: String {
+        URL(fileURLWithPath: path).deletingPathExtension().lastPathComponent
+    }
+}
+
 // MARK: - View Model
 
 @MainActor
@@ -55,6 +64,8 @@ final class HexAidViewModel: ObservableObject {
     @Published var status = ComponentStatus()
     @Published var isBusy = false
     @Published var activeTab: ActiveTab = .patcher
+    @Published private(set) var installedCrossOvers: [CrossOverInstallation] = []
+    @Published var selectedCrossOverPath = "/Applications/CrossOver.app"
 
     // Patcher options
     @Published var updateGStreamer = true
@@ -69,16 +80,26 @@ final class HexAidViewModel: ObservableObject {
 
     @Published var logs: [String] = []
 
-    let cxAppPath = "/Applications/CrossOver.app"
-    let bottlesPath = ("~/Library/Application Support/CrossOver/Bottles" as NSString).expandingTildeInPath
+    var cxAppPath: String { selectedCrossOverPath }
+    var selectedCrossOverName: String {
+        CrossOverInstallation(path: selectedCrossOverPath).displayName
+    }
+    var bottlesPath: String { Self.bottlePath(for: selectedCrossOverPath) }
 
     init() {
+        installedCrossOvers = Self.discoverCrossOvers()
+        if let stable = installedCrossOvers.first(where: { $0.displayName == "CrossOver" }) {
+            selectedCrossOverPath = stable.path
+        } else if let first = installedCrossOvers.first {
+            selectedCrossOverPath = first.path
+        }
+
         if CommandLine.arguments.contains("--tab-optimizations") {
             activeTab = .optimizations
         } else if CommandLine.arguments.contains("--tab-maintenance") {
             activeTab = .maintenance
             logs = [
-                "[09:42:01] Starting HexAid patch on /Applications/CrossOver.app...",
+                "[09:42:01] Starting HexAid patch on \(selectedCrossOverPath)...",
                 "[09:42:02] Resolving latest GStreamer build from Sikarugir-App/gstreamer...",
                 "[09:42:03] Downloading & extracting GStreamer 1.28.1 (with FFmpeg/libav)...",
                 "[09:42:04] Cleaning conflicting stock GStreamer/GLib libraries & linking plugins...",
@@ -86,7 +107,7 @@ final class HexAidViewModel: ObservableObject {
                 "[09:42:06] Resolving latest DXMT release from 3Shain/dxmt...",
                 "[09:42:07] Downloading & extracting DXMT v0.80 builtin...",
                 "[09:42:08] Ensuring WINEMSYNC=1 and ROSETTA_ADVERTISE_AVX=1 on existing bottles...",
-                "[09:42:09] Clearing quarantine, re-signing CrossOver.app & resetting caches...",
+                "[09:42:09] Clearing quarantine, re-signing \(selectedCrossOverName).app & resetting caches...",
                 "[09:42:10] ✅ HexAid patch complete! All components verified."
             ]
         }
@@ -108,16 +129,69 @@ final class HexAidViewModel: ObservableObject {
     }
 
     func refreshStatus() {
+        let found = Self.discoverCrossOvers()
+        installedCrossOvers = found
+        if !found.contains(where: { $0.path == selectedCrossOverPath }) {
+            selectedCrossOverPath = found.first(where: { $0.displayName == "CrossOver" })?.path
+                ?? found.first?.path
+                ?? "/Applications/CrossOver.app"
+        }
+
         let cxPath = cxAppPath
         let btlPath = bottlesPath
         Task.detached {
             let next = Self.inspectStatus(cxAppPath: cxPath, bottlesPath: btlPath)
             await MainActor.run {
+                guard self.selectedCrossOverPath == cxPath else { return }
                 self.status = next
                 self.toggleMetalHUD = next.metalHudEnabled
                 self.toggleNvidiaSpoof = next.nvidiaSpoofEnabled
             }
         }
+    }
+
+    nonisolated static func discoverCrossOvers() -> [CrossOverInstallation] {
+        let fm = FileManager.default
+        let roots = [
+            "/Applications",
+            URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent("Applications").path
+        ]
+        let names = ["CrossOver.app", "CrossOver Preview.app"]
+        var found: [CrossOverInstallation] = []
+        for root in roots {
+            for name in names {
+                let path = URL(fileURLWithPath: root).appendingPathComponent(name).path
+                guard fm.fileExists(atPath: path) else { continue }
+                if !found.contains(where: { $0.path == path }) {
+                    found.append(CrossOverInstallation(path: path))
+                }
+            }
+        }
+        return found.sorted { lhs, rhs in
+            let leftIsPreview = lhs.displayName.localizedCaseInsensitiveContains("Preview")
+            let rightIsPreview = rhs.displayName.localizedCaseInsensitiveContains("Preview")
+            return leftIsPreview == rightIsPreview ? lhs.path < rhs.path : !leftIsPreview
+        }
+    }
+
+    nonisolated static func bottlePath(for cxAppPath: String) -> String {
+        let fallback = ("~/Library/Application Support/CrossOver/Bottles" as NSString).expandingTildeInPath
+        let configPath = "\(cxAppPath)/Contents/SharedSupport/CrossOver/etc/CrossOver.conf"
+        guard let config = try? String(contentsOfFile: configPath, encoding: .utf8),
+              let regex = try? NSRegularExpression(pattern: #"(?m)^\s*"CX_BOTTLE_PATH"\s*=\s*"([^"]+)""#),
+              let match = regex.firstMatch(in: config, range: NSRange(config.startIndex..., in: config)),
+              let range = Range(match.range(at: 1), in: config) else {
+            return fallback
+        }
+
+        let configuredPath = String(config[range])
+            .replacingOccurrences(of: "${USER}", with: NSUserName())
+            .replacingOccurrences(of: "$USER", with: NSUserName())
+            .replacingOccurrences(of: "${HOME}", with: NSHomeDirectory())
+            .replacingOccurrences(of: "$HOME", with: NSHomeDirectory())
+        let firstPath = configuredPath.split(separator: ":", omittingEmptySubsequences: true).first.map(String.init)
+        guard let firstPath else { return fallback }
+        return (firstPath as NSString).expandingTildeInPath
     }
 
     nonisolated static func inspectStatus(cxAppPath: String, bottlesPath: String) -> ComponentStatus {
@@ -225,7 +299,7 @@ final class HexAidViewModel: ObservableObject {
         guard !isBusy else { return }
         isBusy = true
         logs.removeAll()
-        appendLog("Starting HexAid patch on \(cxAppPath)...")
+        appendLog("Starting HexAid patch on \(selectedCrossOverName).app...")
 
         let doGst = updateGStreamer
         let doDxmt = updateDXMT
@@ -245,9 +319,10 @@ final class HexAidViewModel: ObservableObject {
             DXVK_DIR="$CX_APP/Contents/SharedSupport/CrossOver/lib/dxvk"
             BOTTLES_DIR="\(btlPath)"
 
-            if pgrep -x "CrossOver" >/dev/null 2>&1 || pgrep -x "wineloader" >/dev/null 2>&1 || pgrep -x "wineserver" >/dev/null 2>&1; then
-                echo "Closing running CrossOver / Wine processes..."
-                killall CrossOver wineloader wineserver 2>/dev/null || true
+            CX_PROCESS_NAME=$(/usr/libexec/PlistBuddy -c "Print :CFBundleExecutable" "$CX_APP/Contents/Info.plist" 2>/dev/null || echo "CrossOver")
+            if pgrep -x "$CX_PROCESS_NAME" >/dev/null 2>&1 || pgrep -x "wineloader" >/dev/null 2>&1 || pgrep -x "wineserver" >/dev/null 2>&1; then
+                echo "Closing the selected CrossOver app and running Wine processes..."
+                killall "$CX_PROCESS_NAME" wineloader wineserver 2>/dev/null || true
                 sleep 1
             fi
 
@@ -316,7 +391,7 @@ final class HexAidViewModel: ObservableObject {
                 done
             fi
 
-            echo "Clearing quarantine, re-signing CrossOver.app & resetting caches..."
+            echo "Clearing quarantine, re-signing \(selectedCrossOverName).app & resetting caches..."
             xattr -cr "$CX_APP"
             codesign --force --deep --sign - "$CX_APP"
             rm -f "$HOME/Library/Application Support/CrossOver/gstreamer-1.0-registry.x86_64.bin"
@@ -380,7 +455,7 @@ final class HexAidViewModel: ObservableObject {
             done
 
             if [ "\(enableGM ? "1" : "0")" = "1" ]; then
-                echo "Configuring macOS Game Mode for CrossOver & game launchers..."
+                echo "Configuring macOS Game Mode for \(selectedCrossOverName) & game launchers..."
                 /usr/libexec/PlistBuddy -c "Add :LSApplicationCategoryType string public.app-category.games" "$CX_APP/Contents/Info.plist" 2>/dev/null || \\
                 /usr/libexec/PlistBuddy -c "Set :LSApplicationCategoryType public.app-category.games" "$CX_APP/Contents/Info.plist"
                 codesign --force --deep --sign - "$CX_APP"
@@ -621,7 +696,7 @@ struct ContentView: View {
                     HStack(spacing: 8) {
                         Text("HexAid")
                             .font(.title3.weight(.semibold))
-                        Text("v2.3.2")
+                        Text("v2.4.0")
                             .font(.caption.weight(.semibold))
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
@@ -629,9 +704,31 @@ struct ContentView: View {
                             .foregroundColor(.orange)
                             .clipShape(Capsule())
                     }
-                    Text("/Applications/CrossOver.app • v\(vm.status.versionString) • \(vm.status.bottleCount) Bottle\(vm.status.bottleCount == 1 ? "" : "s")")
-                        .font(.system(size: 11.5))
-                        .foregroundColor(.secondary)
+                    HStack(spacing: 6) {
+                        if vm.installedCrossOvers.count > 1 {
+                            Text("v\(vm.status.versionString) • \(vm.status.bottleCount) Bottle\(vm.status.bottleCount == 1 ? "" : "s")")
+                                .font(.system(size: 11.5))
+                                .foregroundColor(.secondary)
+
+                            Picker("", selection: $vm.selectedCrossOverPath) {
+                                ForEach(vm.installedCrossOvers) { installation in
+                                    Text(installation.displayName).tag(installation.path)
+                                }
+                            }
+                            .pickerStyle(.menu)
+                            .labelsHidden()
+                            .accessibilityLabel("CrossOver installation")
+                            .fixedSize()
+                            .disabled(vm.isBusy)
+                            .onChange(of: vm.selectedCrossOverPath) { _ in
+                                vm.refreshStatus()
+                            }
+                        } else {
+                            Text("\(vm.selectedCrossOverName) • v\(vm.status.versionString) • \(vm.status.bottleCount) Bottle\(vm.status.bottleCount == 1 ? "" : "s")")
+                                .font(.system(size: 11.5))
+                                .foregroundColor(.secondary)
+                        }
+                    }
                 }
 
                 Spacer()
@@ -693,7 +790,7 @@ struct ContentView: View {
                             } else {
                                 Image(systemName: "bandage.fill")
                             }
-                            Text(vm.isBusy ? "Patching CrossOver.app..." : (vm.status.isReady ? "Re-Apply Patches to CrossOver.app" : "Patch CrossOver.app Now"))
+                            Text(vm.isBusy ? "Patching \(vm.selectedCrossOverName)..." : (vm.status.isReady ? "Re-Apply Patches to \(vm.selectedCrossOverName)" : "Patch \(vm.selectedCrossOverName) Now"))
                                 .font(.system(size: 13, weight: .semibold))
                         }
                         .frame(maxWidth: .infinity)
@@ -766,7 +863,7 @@ struct ContentView: View {
 
     private var patcherView: some View {
         VStack(spacing: 12) {
-            CardGroupBox(title: "CrossOver Runtime Status", trailingText: vm.status.isReady ? "All Patched" : "Upgrade Needed") {
+            CardGroupBox(title: "\(vm.selectedCrossOverName) Runtime Status", trailingText: vm.status.isReady ? "All Patched" : "Upgrade Needed") {
                 ComponentRowView(
                     iconName: "film.stack.fill",
                     title: "GStreamer + FFmpeg (libgstlibav)",
@@ -798,7 +895,7 @@ struct ContentView: View {
                 )
             }
 
-            CardGroupBox(title: "Patch Options (Applies to CrossOver.app)") {
+            CardGroupBox(title: "Patch Options (Applies to \(vm.selectedCrossOverName))") {
                 ToggleRowView(
                     iconName: "arrow.down.circle.fill",
                     title: "Full GStreamer + FFmpeg Runtime",
