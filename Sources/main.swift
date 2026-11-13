@@ -174,6 +174,10 @@ final class HexAidViewModel: ObservableObject {
         }
     }
 
+    nonisolated static func shellQuoted(_ value: String) -> String {
+        "'" + value.replacingOccurrences(of: "'", with: "'\\''") + "'"
+    }
+
     nonisolated static func bottlePath(for cxAppPath: String) -> String {
         let fallback = ("~/Library/Application Support/CrossOver/Bottles" as NSString).expandingTildeInPath
         let configPath = "\(cxAppPath)/Contents/SharedSupport/CrossOver/etc/CrossOver.conf"
@@ -307,17 +311,19 @@ final class HexAidViewModel: ObservableObject {
         let doPerf = enableAVXAndMSync
         let cxPath = cxAppPath
         let btlPath = bottlesPath
+        let cxShellPath = Self.shellQuoted(cxPath)
+        let bottleShellPath = Self.shellQuoted(btlPath)
 
         Task.detached {
             let script = """
             set -e
             setopt NULL_GLOB NO_NOMATCH
-            CX_APP="\(cxPath)"
+            CX_APP=\(cxShellPath)
             LIB64="$CX_APP/Contents/SharedSupport/CrossOver/lib64"
             WINE_UNIX="$CX_APP/Contents/SharedSupport/CrossOver/lib/wine/x86_64-unix"
             DXMT_DIR="$CX_APP/Contents/SharedSupport/CrossOver/lib/dxmt"
             DXVK_DIR="$CX_APP/Contents/SharedSupport/CrossOver/lib/dxvk"
-            BOTTLES_DIR="\(btlPath)"
+            BOTTLES_DIR=\(bottleShellPath)
 
             CX_PROCESS_NAME=$(/usr/libexec/PlistBuddy -c "Print :CFBundleExecutable" "$CX_APP/Contents/Info.plist" 2>/dev/null || echo "CrossOver")
             if pgrep -x "$CX_PROCESS_NAME" >/dev/null 2>&1 || pgrep -x "wineloader" >/dev/null 2>&1 || pgrep -x "wineserver" >/dev/null 2>&1; then
@@ -414,12 +420,14 @@ final class HexAidViewModel: ObservableObject {
         let enableGM = toggleGameMode
         let cxPath = cxAppPath
         let btlPath = bottlesPath
+        let cxShellPath = Self.shellQuoted(cxPath)
+        let bottleShellPath = Self.shellQuoted(btlPath)
 
         Task.detached {
             let script = """
             set -e
-            CX_APP="\(cxPath)"
-            BOTTLES_DIR="\(btlPath)"
+            CX_APP=\(cxShellPath)
+            BOTTLES_DIR=\(bottleShellPath)
 
             echo "Updating CrossOver bottle configurations..."
             for CONF in "$BOTTLES_DIR"/*/cxbottle.conf; do
