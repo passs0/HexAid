@@ -621,7 +621,7 @@ struct ContentView: View {
                     HStack(spacing: 8) {
                         Text("HexAid")
                             .font(.title3.weight(.semibold))
-                        Text("v2.3.1")
+                        Text("v2.3.2")
                             .font(.caption.weight(.semibold))
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
@@ -744,7 +744,7 @@ struct ContentView: View {
             .background(Color(nsColor: .windowBackgroundColor))
         }
         .frame(minWidth: 680, idealWidth: 740, maxWidth: .infinity,
-               minHeight: 680, idealHeight: 760, maxHeight: .infinity)
+               minHeight: 580, idealHeight: 760, maxHeight: .infinity)
         .confirmationDialog(
             "Purge Shader and Registry Caches?",
             isPresented: $isConfirmingCachePurge,
@@ -962,7 +962,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window.toolbarStyle = .unified
         window.titlebarSeparatorStyle = .none
         window.isMovableByWindowBackground = true
-        window.minSize = NSSize(width: 680, height: 680)
+        window.minSize = NSSize(width: 680, height: 620)
 
         window.contentViewController = NSHostingController(rootView: contentView)
         window.makeKeyAndOrderFront(nil)
