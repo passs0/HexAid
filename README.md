@@ -12,7 +12,7 @@
 <p align="center">
   <a href="https://github.com/passs0/HexAid/releases/latest"><img src="https://img.shields.io/github/v/release/passs0/HexAid?label=Latest%20Release&color=007AFF" alt="Latest Release" /></a>
   <img src="https://img.shields.io/badge/version-2.3.1-blue" alt="Version 2.3.1" />
-  <img src="https://img.shields.io/badge/macOS-15.0%2B%20%7C%20Apple%20Silicon-black?logo=apple" alt="macOS 15.0+" />
+  <img src="https://img.shields.io/badge/macOS-13.0%2B%20%7C%20Apple%20Silicon-black?logo=apple" alt="macOS 13.0+" />
   <img src="https://img.shields.io/badge/framework-SwiftUI%20%7C%20AppKit-blue" alt="Frameworks" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License" /></a>
 </p>
@@ -78,7 +78,7 @@ HexAid keeps patching, bottle optimizations, and cache maintenance in three work
    - *Note: If macOS Gatekeeper flags the binary on first launch (ad-hoc signed), right-click `HexAid.app` ➔ **Open**, or run `xattr -cr /Applications/HexAid.app`.*
 
 ### Option 2: Build from Source
-HexAid has no external runtime dependencies. Build with Swift and the macOS Command Line Tools; Xcode 26 or later is required to compile the dynamic icon catalog. Without `actool`, a local build uses the legacy static icon:
+HexAid has no external runtime dependencies. Build with Swift and the macOS Command Line Tools; Xcode 27 or later is required to compile the dynamic icon catalog. The app targets macOS 13 and later. Without `actool`, a local build uses the legacy static icon:
 ```zsh
 git clone https://github.com/passs0/HexAid.git
 cd HexAid

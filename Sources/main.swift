@@ -930,7 +930,7 @@ struct ContentView: View {
                         }
                         .frame(height: 220)
                         .background(Color(nsColor: .textBackgroundColor).opacity(0.85))
-                        .onChange(of: vm.logs.count) { oldValue, newValue in
+                        .onChange(of: vm.logs.count) { _ in
                             if let last = vm.logs.indices.last {
                                 withAnimation {
                                     proxy.scrollTo(last, anchor: .bottom)

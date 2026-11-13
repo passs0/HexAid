@@ -38,7 +38,7 @@ cat > "${APP_BUNDLE}/Contents/Info.plist" << 'EOF'
     <key>CFBundleIconName</key>
     <string>HexAid</string>
     <key>LSMinimumSystemVersion</key>
-    <string>15.0</string>
+    <string>13.0</string>
     <key>NSHighResolutionCapable</key>
     <true/>
 </dict>
@@ -52,7 +52,7 @@ if [ -d "assets/HexAid.icon.xcassets" ]; then
         xcrun actool "assets/HexAid.icon.xcassets" \
             --compile "${APP_BUNDLE}/Contents/Resources" \
             --platform macosx \
-            --minimum-deployment-target 15.0 \
+            --minimum-deployment-target 13.0 \
             --app-icon HexAid \
             --output-partial-info-plist "$PARTIAL_PLIST" \
             --output-format human-readable-text
@@ -83,9 +83,9 @@ if [ ! -f "${APP_BUNDLE}/Contents/Resources/HexAid.icns" ]; then
     iconutil -c icns "${ICONSET_DIR}" -o "${APP_BUNDLE}/Contents/Resources/AppIcon.icns"
 fi
 
-echo "3. Compiling ${APP_NAME} (targeting arm64-apple-macos15.0)..."
+echo "3. Compiling ${APP_NAME} (targeting arm64-apple-macos13.0)..."
 swiftc -O \
-    -target arm64-apple-macos15.0 \
+    -target arm64-apple-macos13.0 \
     -module-cache-path /tmp/clang-module-cache \
     Sources/main.swift \
     -o "${APP_BUNDLE}/Contents/MacOS/${APP_NAME}" \

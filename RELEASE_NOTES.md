@@ -6,6 +6,6 @@
 - Simplified status rows and section styling, and removed redundant optimization explanations.
 - Added an explicit warning before purging rebuildable shader and registry caches.
 - Reduced the app bundle by excluding duplicate legacy icon files while preserving all four dynamic appearances; stripped nonessential binary symbols.
-- Rebuilt the app with an ad-hoc signature in GitHub Actions.
+- Rebuilt the app with an ad-hoc signature in GitHub Actions using Xcode 27; the app supports macOS 13 and later.
 
 CrossOver patch and bottle-optimization routines are unchanged from v2.3.0. The Metal HUD setting remains a per-bottle launch setting; this release does not add a shortcut.
