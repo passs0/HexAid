@@ -48,15 +48,34 @@ cat > "${APP_BUNDLE}/Contents/Info.plist" << 'EOF'
 </plist>
 EOF
 
-if [ -d "assets/HexAid.icon.xcassets" ] && xcrun actool --version >/dev/null 2>&1; then
-    echo "🎨 Compiling dynamic multi-appearance iconstack into Assets.car..."
-    xcrun actool "assets/HexAid.icon.xcassets" \
-        --compile "${APP_BUNDLE}/Contents/Resources" \
-        --platform macosx \
-        --minimum-deployment-target 15.0 \
-        --app-icon HexAid \
-        --output-partial-info-plist /tmp/hexaid_partial.plist \
-        --output-format human-readable-text || true
+if [ -d "assets/HexAid.icon.xcassets" ]; then
+    if xcrun --find actool >/dev/null 2>&1; then
+        echo "🎨 Compiling the Light, Dark, Clear, and Tinted app icon variants..."
+        PARTIAL_PLIST="$(mktemp "${APP_BUNDLE}/icon-partial.XXXXXX")"
+        xcrun actool "assets/HexAid.icon.xcassets" \
+            --compile "${APP_BUNDLE}/Contents/Resources" \
+            --platform macosx \
+            --minimum-deployment-target 15.0 \
+            --app-icon HexAid \
+            --output-partial-info-plist "$PARTIAL_PLIST" \
+            --output-format human-readable-text
+        python3 - "$PARTIAL_PLIST" "${APP_BUNDLE}/Contents/Info.plist" <<'PY'
+import plistlib, sys
+with open(sys.argv[1], "rb") as f:
+    additions = plistlib.load(f)
+with open(sys.argv[2], "rb") as f:
+    info = plistlib.load(f)
+info.update(additions)
+with open(sys.argv[2], "wb") as f:
+    plistlib.dump(info, f)
+PY
+        rm -f "$PARTIAL_PLIST"
+    elif [ "${CI:-}" = "true" ]; then
+        echo "Error: Xcode with actool is required to build the dynamic app icon." >&2
+        exit 1
+    else
+        echo "Warning: actool is unavailable; using the legacy static icon for this local build." >&2
+    fi
 fi
 
 echo "3. Compiling ${APP_NAME} (targeting arm64-apple-macos15.0)..."
