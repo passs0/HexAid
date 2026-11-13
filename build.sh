@@ -28,9 +28,9 @@ cat > "${APP_BUNDLE}/Contents/Info.plist" << 'EOF'
     <key>CFBundleDisplayName</key>
     <string>HexAid</string>
     <key>CFBundleVersion</key>
-    <string>2.3.0</string>
+    <string>2.3.1</string>
     <key>CFBundleShortVersionString</key>
-    <string>2.3</string>
+    <string>2.3.1</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleIconFile</key>
@@ -96,6 +96,7 @@ strip -rSTx "${APP_BUNDLE}/Contents/MacOS/${APP_NAME}"
 
 echo "4. Signing ${APP_BUNDLE}..."
 codesign --force --deep --sign - "${APP_BUNDLE}"
+codesign --verify --deep --strict "${APP_BUNDLE}"
 
 echo "✅ Built ${APP_BUNDLE} successfully!"
 echo "To install to /Applications:"

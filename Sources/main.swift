@@ -621,7 +621,7 @@ struct ContentView: View {
                     HStack(spacing: 8) {
                         Text("HexAid")
                             .font(.title3.weight(.semibold))
-                        Text("v2.3.0")
+                        Text("v2.3.1")
                             .font(.caption.weight(.semibold))
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
@@ -743,8 +743,8 @@ struct ContentView: View {
             .padding(.vertical, 12)
             .background(Color(nsColor: .windowBackgroundColor))
         }
-        .frame(minWidth: 620, idealWidth: 620, maxWidth: .infinity,
-               minHeight: 650, idealHeight: 670, maxHeight: .infinity)
+        .frame(minWidth: 680, idealWidth: 740, maxWidth: .infinity,
+               minHeight: 680, idealHeight: 760, maxHeight: .infinity)
         .confirmationDialog(
             "Purge Shader and Registry Caches?",
             isPresented: $isConfirmingCachePurge,
@@ -952,7 +952,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         let contentView = ContentView()
         window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 620, height: 690),
+            contentRect: NSRect(x: 0, y: 0, width: 740, height: 760),
             styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
             defer: false
@@ -962,7 +962,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window.toolbarStyle = .unified
         window.titlebarSeparatorStyle = .none
         window.isMovableByWindowBackground = true
-        window.minSize = NSSize(width: 600, height: 640)
+        window.minSize = NSSize(width: 680, height: 680)
 
         window.contentViewController = NSHostingController(rootView: contentView)
         window.makeKeyAndOrderFront(nil)
