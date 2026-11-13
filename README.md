@@ -78,7 +78,7 @@ HexAid keeps patching, bottle optimizations, and cache maintenance in three work
    - *Note: If macOS Gatekeeper flags the binary on first launch (ad-hoc signed), right-click `HexAid.app` ➔ **Open**, or run `xattr -cr /Applications/HexAid.app`.*
 
 ### Option 2: Build from Source
-HexAid has no external runtime dependencies. Build with Swift and the macOS Command Line Tools; Xcode 27 or later is required to compile the dynamic icon catalog. The app targets macOS 13 and later. Without `actool`, a local build uses the legacy static icon:
+HexAid has no external runtime dependencies. Build with Swift and the macOS Command Line Tools; Xcode 26.6 or later is required to compile the dynamic icon catalog. The app targets macOS 13 and later. Without `actool`, a local build uses the legacy static icon:
 ```zsh
 git clone https://github.com/passs0/HexAid.git
 cd HexAid
