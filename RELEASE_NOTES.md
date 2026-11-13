@@ -1,5 +1,12 @@
 # HexAid Release Notes
 
+## v2.3.2 — Window layout fix
+
+- Reduced the minimum content height and matched the native window minimum so the persistent patch action stays fully inside the window on shorter displays.
+- Kept the patch workspace scrollable while preserving the sticky bottom action bar.
+- Rebuilt and ad-hoc code-signed with the GitHub Actions workflow.
+
+
 ## v2.3.1 — Quality-of-life update
 
 - Open the main patcher workspace at a wider, taller default size so its primary content is less likely to require scrolling.
