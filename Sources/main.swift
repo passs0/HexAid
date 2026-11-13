@@ -469,18 +469,13 @@ final class HexAidViewModel: ObservableObject {
 
 struct IconWellView: View {
     let systemName: String
-    let gradient: [Color]
 
     var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 6.5, style: .continuous)
-                .fill(LinearGradient(colors: gradient, startPoint: .top, endPoint: .bottom))
-                .frame(width: 28, height: 28)
-                .shadow(color: gradient.first?.opacity(0.3) ?? .clear, radius: 2, x: 0, y: 1)
-            Image(systemName: systemName)
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(.white)
-        }
+        Image(systemName: systemName)
+            .font(.title3)
+            .symbolRenderingMode(.hierarchical)
+            .foregroundStyle(.secondary)
+            .frame(width: 24)
     }
 }
 
@@ -496,36 +491,25 @@ struct CardGroupBox<Content: View>: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        GroupBox {
+            content
+        } label: {
             HStack {
-                Text(title.uppercased())
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(.secondary)
-                Spacer()
-                if let trailingText = trailingText {
+                Text(title)
+                    .font(.headline)
+                Spacer(minLength: 8)
+                if let trailingText {
                     Text(trailingText)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(.secondary)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
                 }
             }
-            .padding(.horizontal, 4)
-
-            VStack(spacing: 0) {
-                content
-            }
-            .background(Color(nsColor: .controlBackgroundColor).opacity(0.75))
-            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .strokeBorder(Color(nsColor: .separatorColor).opacity(0.35), lineWidth: 0.5)
-            )
         }
     }
 }
 
 struct ComponentRowView: View {
     let iconName: String
-    let gradient: [Color]
     let title: String
     let subtitle: String
     let badgeText: String
@@ -535,20 +519,20 @@ struct ComponentRowView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 12) {
-                IconWellView(systemName: iconName, gradient: gradient)
+                IconWellView(systemName: iconName)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.body)
                     Text(subtitle)
-                        .font(.system(size: 11))
+                        .font(.callout)
                         .foregroundColor(.secondary)
                 }
 
                 Spacer()
 
                 Text(badgeText)
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(.caption.weight(.semibold))
                     .padding(.horizontal, 8)
                     .padding(.vertical, 3)
                     .background(
@@ -570,7 +554,6 @@ struct ComponentRowView: View {
 
 struct ToggleRowView: View {
     let iconName: String
-    let gradient: [Color]
     let title: String
     let description: String
     @Binding var isOn: Bool
@@ -580,13 +563,13 @@ struct ToggleRowView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 12) {
-                IconWellView(systemName: iconName, gradient: gradient)
+                IconWellView(systemName: iconName)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.body)
                     Text(description)
-                        .font(.system(size: 11))
+                        .font(.callout)
                         .foregroundColor(.secondary)
                 }
 
@@ -612,6 +595,7 @@ struct ToggleRowView: View {
 
 struct ContentView: View {
     @StateObject private var vm = HexAidViewModel()
+    @State private var isConfirmingCachePurge = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -636,9 +620,9 @@ struct ContentView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 8) {
                         Text("HexAid")
-                            .font(.system(size: 18, weight: .bold))
-                        Text("v2.3.0")
-                            .font(.system(size: 11, weight: .semibold))
+                            .font(.title3.weight(.semibold))
+                        Text("v2.3.1")
+                            .font(.caption.weight(.semibold))
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
                             .background(Color.orange.opacity(0.18))
@@ -741,7 +725,7 @@ struct ContentView: View {
                     .disabled(vm.isBusy || !vm.status.crossoverExists)
 
                 case .maintenance:
-                    Button(action: { vm.clearShaderCaches() }) {
+                    Button(action: { isConfirmingCachePurge = true }) {
                         HStack(spacing: 8) {
                             Image(systemName: "trash")
                             Text("Purge Shader & Registry Caches (\(vm.status.formattedCacheSize))")
@@ -759,8 +743,20 @@ struct ContentView: View {
             .padding(.vertical, 12)
             .background(Color(nsColor: .windowBackgroundColor))
         }
-        .frame(minWidth: 620, idealWidth: 620, maxWidth: .infinity,
-               minHeight: 650, idealHeight: 670, maxHeight: .infinity)
+        .frame(minWidth: 680, idealWidth: 740, maxWidth: .infinity,
+               minHeight: 680, idealHeight: 760, maxHeight: .infinity)
+        .confirmationDialog(
+            "Purge Shader and Registry Caches?",
+            isPresented: $isConfirmingCachePurge,
+            titleVisibility: .visible
+        ) {
+            Button("Purge Caches", role: .destructive) {
+                vm.clearShaderCaches()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("The caches will be rebuilt as you use CrossOver. This can make the next game launch take longer.")
+        }
         .onAppear {
             vm.refreshStatus()
         }
@@ -773,7 +769,6 @@ struct ContentView: View {
             CardGroupBox(title: "CrossOver Runtime Status", trailingText: vm.status.isReady ? "All Patched" : "Upgrade Needed") {
                 ComponentRowView(
                     iconName: "film.stack.fill",
-                    gradient: [.purple, .indigo],
                     title: "GStreamer + FFmpeg (libgstlibav)",
                     subtitle: "Full media codecs for Resident Evil, Silent Hill, UE4/5 FMVs",
                     badgeText: vm.status.gstreamerVersion,
@@ -781,7 +776,6 @@ struct ContentView: View {
                 )
                 ComponentRowView(
                     iconName: "link",
-                    gradient: [.blue, .cyan],
                     title: "winegstreamer.so Link (LC_RPATH)",
                     subtitle: "In-place Mach-O rpath linking to GStreamer.framework",
                     badgeText: vm.status.hasRpath ? "Linked" : "Unpatched",
@@ -789,7 +783,6 @@ struct ContentView: View {
                 )
                 ComponentRowView(
                     iconName: "cpu.fill",
-                    gradient: [.orange, .red],
                     title: "Apple D3DMetal (Game Porting Toolkit)",
                     subtitle: "Validated DirectX 12 to Metal runtime (Protected)",
                     badgeText: vm.status.d3dMetalVersion,
@@ -797,7 +790,6 @@ struct ContentView: View {
                 )
                 ComponentRowView(
                     iconName: "gauge.with.needle.fill",
-                    gradient: [.teal, .green],
                     title: "DXMT (DirectX 11 to Metal)",
                     subtitle: "High-performance Metal backend for DirectX 11 in lib/dxmt",
                     badgeText: vm.status.dxmtVersion,
@@ -809,7 +801,6 @@ struct ContentView: View {
             CardGroupBox(title: "Patch Options (Applies to CrossOver.app)") {
                 ToggleRowView(
                     iconName: "arrow.down.circle.fill",
-                    gradient: [.purple, .indigo],
                     title: "Full GStreamer + FFmpeg Runtime",
                     description: "Downloads latest Sikarugir-App build with H.264/HEVC/VP9 support",
                     isOn: $vm.updateGStreamer,
@@ -817,7 +808,6 @@ struct ContentView: View {
                 )
                 ToggleRowView(
                     iconName: "arrow.triangle.2.circlepath",
-                    gradient: [.teal, .green],
                     title: "Latest DXMT Builtin Release",
                     description: "Fetches official 3Shain/dxmt release to upgrade Direct3D 11",
                     isOn: $vm.updateDXMT,
@@ -825,7 +815,6 @@ struct ContentView: View {
                 )
                 ToggleRowView(
                     iconName: "circle.grid.2x2.fill",
-                    gradient: [.blue, .indigo],
                     title: "Latest DXVK-macOS",
                     description: "Updates Vulkan D3D9/D3D10/D3D11 fallback libraries in lib/dxvk",
                     isOn: $vm.updateDXVK,
@@ -833,7 +822,6 @@ struct ContentView: View {
                 )
                 ToggleRowView(
                     iconName: "bolt.fill",
-                    gradient: [.yellow, .orange],
                     title: "Enable MSync + Rosetta 2 AVX",
                     description: "Writes WINEMSYNC=1 and ROSETTA_ADVERTISE_AVX=1 to existing bottles",
                     isOn: $vm.enableAVXAndMSync,
@@ -849,7 +837,6 @@ struct ContentView: View {
             CardGroupBox(title: "Gaming & Performance Tweaks", trailingText: "\(vm.status.bottleCount) Bottles Target") {
                 ToggleRowView(
                     iconName: "chart.xyaxis.line",
-                    gradient: [.cyan, .blue],
                     title: "Apple Metal Performance HUD",
                     description: "Overlay real-time FPS, frame pacing graph, and GPU/VRAM load",
                     isOn: $vm.toggleMetalHUD,
@@ -857,7 +844,6 @@ struct ContentView: View {
                 )
                 ToggleRowView(
                     iconName: "sparkles.tv.fill",
-                    gradient: [.green, .teal],
                     title: "Spoof NVIDIA RTX for D3DMetal",
                     description: "Reports RTX 4090 (0x10DE) to bypass UE5 driver warnings & unlock DLSS",
                     isOn: $vm.toggleNvidiaSpoof,
@@ -865,7 +851,6 @@ struct ContentView: View {
                 )
                 ToggleRowView(
                     iconName: "gamecontroller.fill",
-                    gradient: [.red, .purple],
                     title: "Enable macOS Game Mode for Games",
                     description: "Tags CrossOver and game launchers with public.app-category.games",
                     isOn: $vm.toggleGameMode,
@@ -874,21 +859,6 @@ struct ContentView: View {
                 )
             }
 
-            CardGroupBox(title: "Optimization Details") {
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "info.circle.fill")
-                            .foregroundColor(.blue)
-                        Text("How These Tweaks Work")
-                            .font(.system(size: 12, weight: .semibold))
-                    }
-                    Text("• **Metal HUD:** Enables Apple's native GPU metrics overlay via `MTL_HUD_ENABLED=1` in `cxbottle.conf`.\n• **NVIDIA Spoof:** Solves the notorious 'Outdated AMD Graphics Driver' popup in *Silent Hill 2* and other UE5 games while unlocking in-game DLSS (which routes to Apple MetalFX).\n• **Game Mode:** Injects `public.app-category.games` into CrossOver and your game `.app` shortcuts, instructing macOS `gamepolicyd` to prioritize CPU/GPU resources and boost Bluetooth controller polling when full screen.")
-                        .font(.system(size: 11))
-                        .foregroundColor(.secondary)
-                        .lineSpacing(3)
-                }
-                .padding(12)
-            }
         }
     }
 
@@ -896,7 +866,7 @@ struct ContentView: View {
         VStack(spacing: 12) {
             CardGroupBox(title: "Storage & Shader Caches", trailingText: vm.status.formattedCacheSize) {
                 HStack(spacing: 12) {
-                    IconWellView(systemName: "trash.circle.fill", gradient: [.orange, .red])
+                    IconWellView(systemName: "trash")
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text("D3DMetal Shaders & GStreamer Registry")
@@ -905,14 +875,7 @@ struct ContentView: View {
                             .font(.system(size: 11))
                             .foregroundColor(.secondary)
                     }
-
                     Spacer()
-
-                    Button("Purge Caches") {
-                        vm.clearShaderCaches()
-                    }
-                    .buttonStyle(.bordered)
-                    .disabled(vm.isBusy)
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
@@ -967,7 +930,7 @@ struct ContentView: View {
                         }
                         .frame(height: 220)
                         .background(Color(nsColor: .textBackgroundColor).opacity(0.85))
-                        .onChange(of: vm.logs.count) { oldValue, newValue in
+                        .onChange(of: vm.logs.count) { _ in
                             if let last = vm.logs.indices.last {
                                 withAnimation {
                                     proxy.scrollTo(last, anchor: .bottom)
@@ -989,7 +952,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         let contentView = ContentView()
         window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 620, height: 690),
+            contentRect: NSRect(x: 0, y: 0, width: 740, height: 760),
             styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
             defer: false
@@ -999,7 +962,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         window.toolbarStyle = .unified
         window.titlebarSeparatorStyle = .none
         window.isMovableByWindowBackground = true
-        window.minSize = NSSize(width: 600, height: 640)
+        window.minSize = NSSize(width: 680, height: 680)
 
         window.contentViewController = NSHostingController(rootView: contentView)
         window.makeKeyAndOrderFront(nil)

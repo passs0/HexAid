@@ -11,13 +11,10 @@
 
 <p align="center">
   <a href="https://github.com/passs0/HexAid/releases/latest"><img src="https://img.shields.io/github/v/release/passs0/HexAid?label=Latest%20Release&color=007AFF" alt="Latest Release" /></a>
+  <img src="https://img.shields.io/badge/version-2.3.1-blue" alt="Version 2.3.1" />
   <img src="https://img.shields.io/badge/macOS-13.0%2B%20%7C%20Apple%20Silicon-black?logo=apple" alt="macOS 13.0+" />
   <img src="https://img.shields.io/badge/framework-SwiftUI%20%7C%20AppKit-blue" alt="Frameworks" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License" /></a>
-</p>
-
-<p align="center">
-  <img src="assets/preview.png" width="600" alt="HexAid CrossOver Patcher Interface" />
 </p>
 
 ---
@@ -68,43 +65,20 @@ When CodeWeavers CrossOver updates (or ships out of the box), several key compon
 
 ## 🖥️ User Interface & Workspaces
 
-HexAid is designed with **Apple Human Interface Guidelines (HIG)**, featuring translucent materials, colorful squircle icon wells, and a persistent sticky action footer across three focused workspaces:
-
-<div align="center">
-
-### 1. Patcher Workspace
-*In-place upgrades for GStreamer + FFmpeg, DXMT, and DXVK while protecting official Apple D3DMetal.*
-
-<img src="assets/preview_patcher.png" width="580" alt="HexAid Patcher Interface" />
-
-<br/><br/>
-
-### 2. Gaming Optimizations Workspace
-*One-click toggles for Apple Metal Performance HUD, NVIDIA RTX GPU spoofing, and macOS Game Mode.*
-
-<img src="assets/preview_optimizations.png" width="580" alt="HexAid Optimizations Interface" />
-
-<br/><br/>
-
-### 3. Activity & Caches Workspace
-*Live D3DMetal and GStreamer shader cache inspection with one-click purge and an interactive execution log.*
-
-<img src="assets/preview_maintenance.png" width="580" alt="HexAid Activity & Caches Interface" />
-
-</div>
+HexAid keeps patching, bottle optimizations, and cache maintenance in three workspaces. Runtime status uses compact system-symbol rows and native group sections; cache purging asks for confirmation because the caches are rebuilt during later use. Screenshots are omitted until they can be refreshed from this release's interface.
 
 ---
 
 ## 📦 Installation
 
 ### Option 1: Direct Download (Pre-built macOS Disk Image - Recommended)
-1. Download **[`HexAid-v2.3.dmg`](https://github.com/passs0/HexAid/releases/latest)** from [GitHub Releases](https://github.com/passs0/HexAid/releases).
+1. Download **[`HexAid-v2.3.1.dmg`](https://github.com/passs0/HexAid/releases/latest)** from [GitHub Releases](https://github.com/passs0/HexAid/releases).
 2. Open the downloaded `.dmg` and drag **`HexAid.app`** directly into the **`Applications`** folder shortcut.
 3. Open **`HexAid.app`** from `/Applications` and click **Patch CrossOver Now**!
    - *Note: If macOS Gatekeeper flags the binary on first launch (ad-hoc signed), right-click `HexAid.app` ➔ **Open**, or run `xattr -cr /Applications/HexAid.app`.*
 
 ### Option 2: Build from Source
-HexAid has **zero external dependencies** and compiles cleanly using the standard macOS Command Line Tools (`swiftc`, `iconutil`, `codesign`):
+HexAid has no external runtime dependencies. Build with Swift and the macOS Command Line Tools; Xcode 26.6 or later is required to compile the dynamic icon catalog. The app targets macOS 13 and later. Without `actool`, a local build uses the legacy static icon:
 ```zsh
 git clone https://github.com/passs0/HexAid.git
 cd HexAid
@@ -132,3 +106,5 @@ Whenever CrossOver updates via its built-in updater, simply open **HexAid** from
 ## 📄 License
 
 Released under the [MIT License](LICENSE).
+
+See [release notes](RELEASE_NOTES.md) and the [roadmap](ROADMAP.md).
