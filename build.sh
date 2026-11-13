@@ -8,13 +8,10 @@ BUILD_DIR="build"
 APP_BUNDLE="${BUILD_DIR}/${APP_NAME}.app"
 ICONSET_DIR="${BUILD_DIR}/AppIcon.iconset"
 
-echo "1. Generating Apple Liquid Glass icon..."
-mkdir -p "${BUILD_DIR}"
-swift -module-cache-path /tmp/clang-module-cache scripts/generate_icon.swift "${ICONSET_DIR}" "assets/icon.png"
-
+echo "1. Preparing a clean app bundle..."
+rm -rf "${APP_BUNDLE}"
 mkdir -p "${APP_BUNDLE}/Contents/MacOS"
 mkdir -p "${APP_BUNDLE}/Contents/Resources"
-iconutil -c icns "${ICONSET_DIR}" -o "${APP_BUNDLE}/Contents/Resources/AppIcon.icns"
 
 echo "2. Writing Info.plist..."
 cat > "${APP_BUNDLE}/Contents/Info.plist" << 'EOF'
@@ -76,6 +73,14 @@ PY
     else
         echo "Warning: actool is unavailable; using the legacy static icon for this local build." >&2
     fi
+fi
+
+# Keep the generated asset-catalog ICNS as the legacy fallback when available.
+# Generate the larger standalone icon only for local builds without actool.
+if [ ! -f "${APP_BUNDLE}/Contents/Resources/HexAid.icns" ]; then
+    echo "Generating a legacy fallback icon..."
+    swift -module-cache-path /tmp/clang-module-cache scripts/generate_icon.swift "${ICONSET_DIR}" "assets/icon.png"
+    iconutil -c icns "${ICONSET_DIR}" -o "${APP_BUNDLE}/Contents/Resources/AppIcon.icns"
 fi
 
 echo "3. Compiling ${APP_NAME} (targeting arm64-apple-macos15.0)..."
