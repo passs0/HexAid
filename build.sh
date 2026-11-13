@@ -92,6 +92,8 @@ swiftc -O \
     -framework SwiftUI \
     -framework AppKit
 
+strip -rSTx "${APP_BUNDLE}/Contents/MacOS/${APP_NAME}"
+
 echo "4. Signing ${APP_BUNDLE}..."
 codesign --force --deep --sign - "${APP_BUNDLE}"
 
