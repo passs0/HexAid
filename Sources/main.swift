@@ -310,6 +310,7 @@ final class HexAidViewModel: ObservableObject {
         let doDxvk = updateDXVK
         let doPerf = enableAVXAndMSync
         let cxPath = cxAppPath
+        let cxName = selectedCrossOverName
         let btlPath = bottlesPath
         let cxShellPath = Self.shellQuoted(cxPath)
         let bottleShellPath = Self.shellQuoted(btlPath)
@@ -397,7 +398,7 @@ final class HexAidViewModel: ObservableObject {
                 done
             fi
 
-            echo "Clearing quarantine, re-signing \(selectedCrossOverName).app & resetting caches..."
+            echo "Clearing quarantine, re-signing \(cxName).app & resetting caches..."
             xattr -cr "$CX_APP"
             codesign --force --deep --sign - "$CX_APP"
             rm -f "$HOME/Library/Application Support/CrossOver/gstreamer-1.0-registry.x86_64.bin"
@@ -419,6 +420,7 @@ final class HexAidViewModel: ObservableObject {
         let enableNvidia = toggleNvidiaSpoof
         let enableGM = toggleGameMode
         let cxPath = cxAppPath
+        let cxName = selectedCrossOverName
         let btlPath = bottlesPath
         let cxShellPath = Self.shellQuoted(cxPath)
         let bottleShellPath = Self.shellQuoted(btlPath)
@@ -463,7 +465,7 @@ final class HexAidViewModel: ObservableObject {
             done
 
             if [ "\(enableGM ? "1" : "0")" = "1" ]; then
-                echo "Configuring macOS Game Mode for \(selectedCrossOverName) & game launchers..."
+                echo "Configuring macOS Game Mode for \(cxName) & game launchers..."
                 /usr/libexec/PlistBuddy -c "Add :LSApplicationCategoryType string public.app-category.games" "$CX_APP/Contents/Info.plist" 2>/dev/null || \\
                 /usr/libexec/PlistBuddy -c "Set :LSApplicationCategoryType public.app-category.games" "$CX_APP/Contents/Info.plist"
                 codesign --force --deep --sign - "$CX_APP"
