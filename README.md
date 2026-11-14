@@ -6,12 +6,12 @@
 
 <p align="center">
   <strong>One-click in-place patcher for CrossOver on Apple Silicon macOS</strong><br/>
-  Upgrades GStreamer (with FFmpeg / Media Foundation decoding), DXMT, DXVK, Apple Game Porting Toolkit (<code>D3DMetal.framework</code>), and bottle performance settings directly inside <code>/Applications/CrossOver.app</code>.
+  Detects CrossOver and CrossOver Preview, then upgrades GStreamer (with FFmpeg / Media Foundation decoding), DXMT, DXVK, Apple Game Porting Toolkit (<code>D3DMetal.framework</code>), and bottle performance settings in the selected installation.
 </p>
 
 <p align="center">
   <a href="https://github.com/passs0/HexAid/releases/latest"><img src="https://img.shields.io/github/v/release/passs0/HexAid?label=Latest%20Release&color=007AFF" alt="Latest Release" /></a>
-  <img src="https://img.shields.io/badge/version-2.3.2-blue" alt="Version 2.3.2" />
+  <img src="https://img.shields.io/badge/version-2.4.0-blue" alt="Version 2.4.0" />
   <img src="https://img.shields.io/badge/macOS-13.0%2B%20%7C%20Apple%20Silicon-black?logo=apple" alt="macOS 13.0+" />
   <img src="https://img.shields.io/badge/framework-SwiftUI%20%7C%20AppKit-blue" alt="Frameworks" />
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="MIT License" /></a>
@@ -31,10 +31,10 @@ When CodeWeavers CrossOver updates (or ships out of the box), several key compon
 - **Broken / Freeze-Prone In-Game Cutscenes:** Stock CrossOver omits the GStreamer `libav` (FFmpeg) plugin (`libgstlibav.dylib`), causing games like *Silent Hill 2 Remake*, *Resident Evil*, and other Unreal Engine 4/5 titles using Windows Media Foundation (`winegstreamer`) to freeze or display a black screen when playing H.264/HEVC/VP9 cutscenes.
 - **Duplicate App Clutter (`Crossover_patched.app`) & Missing D3DMetal:** Earlier wrapper tools either required launching CrossOver through a secondary app or duplicated `CrossOver.app` while accidentally stripping `lib64/apple_gptk` (`D3DMetal`).
 
-**HexAid patches `/Applications/CrossOver.app` directly in place:**
+**HexAid detects CrossOver and CrossOver Preview in `/Applications` and `~/Applications`. If both are installed, select the app bundle to patch:**
 - **No duplicate `Crossover_patched.app`**—launch CrossOver normally from your Dock or Applications folder.
 - **Preserves and protects Apple Game Porting Toolkit (`D3DMetal.framework`)** from accidental deletion or incompatible beta tampering.
-- **Existing (Old) Bottles Automatically Benefit:** Because CrossOver bottles load their graphics backends (`D3DMetal`, `DXMT`, `DXVK`) and media libraries (`winegstreamer.so` + `GStreamer.framework`) dynamically from `/Applications/CrossOver.app` at runtime, **once you run HexAid, all of your existing (old) bottles and already-installed games immediately benefit**—no need to recreate bottles or reinstall games!
+- **Existing (Old) Bottles Automatically Benefit:** Because CrossOver bottles load their graphics backends (`D3DMetal`, `DXMT`, `DXVK`) and media libraries (`winegstreamer.so` + `GStreamer.framework`) from the selected CrossOver app at runtime, **the selected installation’s configured bottle directory and its installed games benefit**—no need to recreate bottles or reinstall games!
 
 ---
 
@@ -42,9 +42,9 @@ When CodeWeavers CrossOver updates (or ships out of the box), several key compon
 
 1. **Full GStreamer + FFmpeg (`libgstlibav.dylib`) Upgrade**
    - Automatically fetches the latest universal `GStreamer.framework` build from [`Sikarugir-App/gstreamer`](https://github.com/Sikarugir-App/gstreamer).
-   - Removes conflicting partial `libgst*` / `libglib*` libraries in `CrossOver.app/Contents/SharedSupport/CrossOver/lib64`, links `lib64/gstreamer-1.0` to `GStreamer.framework`, and adds `@loader_path/../../../lib64/GStreamer.framework/Versions/Current/lib` to `winegstreamer.so` via `install_name_tool`.
+   - Removes conflicting partial `libgst*` / `libglib*` libraries in the selected app bundle’s `Contents/SharedSupport/CrossOver/lib64`, links `lib64/gstreamer-1.0` to `GStreamer.framework`, and adds `@loader_path/../../../lib64/GStreamer.framework/Versions/Current/lib` to `winegstreamer.so` via `install_name_tool`.
 2. **Latest DXMT (Direct3D 10/11 to Metal)**
-   - Automatically queries GitHub Releases for the latest [`3Shain/dxmt`](https://github.com/3Shain/dxmt) release and installs `d3d10core.dll`, `d3d11.dll`, `dxgi.dll`, and `winemetal.dll`/`winemetal.so` into `CrossOver.app`.
+   - Automatically queries GitHub Releases for the latest [`3Shain/dxmt`](https://github.com/3Shain/dxmt) release and installs `d3d10core.dll`, `d3d11.dll`, `dxgi.dll`, and `winemetal.dll`/`winemetal.so` into the selected app bundle.
 3. **Latest DXVK-macOS (Optional Toggle)**
    - Queries [`Gcenx/DXVK-macOS`](https://github.com/Gcenx/DXVK-macOS) and upgrades `lib/dxvk` (`x86_64-windows` and `i386-windows`).
 4. **Apple Game Porting Toolkit (`D3DMetal.framework`) Integrity & Protection**
@@ -55,11 +55,11 @@ When CodeWeavers CrossOver updates (or ships out of the box), several key compon
 6. **Apple Metal Performance HUD Overlay (`MTL_HUD_ENABLED=1`)**
    - One-click toggle to enable or disable Apple's native Metal real-time performance HUD (FPS, frame-time graph, and GPU memory load) across all your bottles.
 7. **macOS Game Mode Enabler**
-   - Injects `LSApplicationCategoryType = public.app-category.games` into `CrossOver.app` and your game launchers in `~/Applications/CrossOver`, ensuring macOS `gamepolicyd` prioritizes CPU/GPU resources and boosts Bluetooth controller polling rates in full screen.
+   - Injects `LSApplicationCategoryType = public.app-category.games` into the selected app bundle and your game launchers in `~/Applications/CrossOver`, ensuring macOS `gamepolicyd` prioritizes CPU/GPU resources and boosts Bluetooth controller polling rates in full screen.
 8. **Storage & Shader Cache Inspector**
    - Scans and calculates the actual disk space consumed by D3DMetal shader caches in `/var/folders` and GStreamer registries, providing one-click cache purging.
 9. **Existing Bottle Performance Optimizations**
-   - Scans all existing bottles in `~/Library/Application Support/CrossOver/Bottles/` and enables `WINEMSYNC=1` (MSync) and `ROSETTA_ADVERTISE_AVX=1` (AVX/AVX2 advertising under Rosetta 2) in `cxbottle.conf`.
+   - Scans bottles in the selected installation’s configured bottle directory (falling back to `~/Library/Application Support/CrossOver/Bottles/`) and enables `WINEMSYNC=1` (MSync) and `ROSETTA_ADVERTISE_AVX=1` (AVX/AVX2 advertising under Rosetta 2) in `cxbottle.conf`.
 
 ---
 
@@ -72,13 +72,13 @@ HexAid keeps patching, bottle optimizations, and cache maintenance in three work
 ## 📦 Installation
 
 ### Option 1: Direct Download (Pre-built macOS Disk Image - Recommended)
-1. Download **[`HexAid-v2.3.2.dmg`](https://github.com/passs0/HexAid/releases/latest)** from [GitHub Releases](https://github.com/passs0/HexAid/releases).
+1. Download **[`HexAid-v2.4.0.dmg`](https://github.com/passs0/HexAid/releases/latest)** from [GitHub Releases](https://github.com/passs0/HexAid/releases).
 2. Open the downloaded `.dmg` and drag **`HexAid.app`** directly into the **`Applications`** folder shortcut.
 3. Open **`HexAid.app`** from `/Applications` and click **Patch CrossOver Now**!
    - *Note: If macOS Gatekeeper flags the binary on first launch (ad-hoc signed), right-click `HexAid.app` ➔ **Open**, or run `xattr -cr /Applications/HexAid.app`.*
 
 ### Option 2: Build from Source
-HexAid has no external runtime dependencies. Build with Swift and the macOS Command Line Tools; Xcode 26.6 or later is required to compile the dynamic icon catalog. The app targets macOS 13 and later. Without `actool`, a local build uses the legacy static icon:
+HexAid has no external runtime dependencies. Build with Swift and the macOS Command Line Tools; Xcode 26.6 or later is required to compile the dynamic icon catalog. The app targets macOS 13 and later. When both CrossOver variants are detected, HexAid lets you select which one to patch. Without `actool`, a local build uses the legacy static icon:
 ```zsh
 git clone https://github.com/passs0/HexAid.git
 cd HexAid
@@ -87,7 +87,7 @@ chmod +x build.sh
 cp -R build/HexAid.app /Applications/
 ```
 
-Whenever CrossOver updates via its built-in updater, simply open **HexAid** from `/Applications` and click **Patch CrossOver Now**.
+Whenever the selected CrossOver installation updates, open **HexAid** from `/Applications`, confirm the selected app in the header, and re-apply its patches.
 
 ---
 
